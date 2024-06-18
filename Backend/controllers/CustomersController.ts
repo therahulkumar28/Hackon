@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import Customer from '../models/customerSchema';
-
+import Product from '../models/productSchema';
 // Create a new customer
 export const createCustomer = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -26,15 +26,25 @@ export const createCustomer = async (req: Request, res: Response): Promise<void>
 // Add a transaction
 export const addTransaction = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { customerId, type, amount } = req.body;
+    const { customerId, productId } = req.body;
     const customer = await Customer.findById(customerId);
+    const product = await Product.findById(productId);
 
     if (!customer) {
       res.status(404).json({ message: 'Customer not found' });
       return;
     }
 
-    customer.transactions.push({ type, amount, date: new Date() } as any);
+    if (!product) {
+      res.status(404).json({ message: 'Product not found' });
+      return;
+    }
+
+    const discountAmount = product.price * (product.discount / 100);
+    const spendingAmount = product.price - discountAmount;
+
+    customer.transactions.push({ type: 'saving', amount: discountAmount, date: new Date() } as any);
+    customer.transactions.push({ type: 'expense', amount: spendingAmount, date: new Date() } as any);
     await customer.save();
 
     res.status(200).json(customer);
@@ -46,7 +56,7 @@ export const addTransaction = async (req: Request, res: Response): Promise<void>
 // Add a savings goal
 export const addSavingsGoal = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { customerId, goalAmount, targetDate } = req.body;
+    const { customerId, goalAmount} = req.body;
     const customer = await Customer.findById(customerId);
 
     if (!customer) {
@@ -54,7 +64,7 @@ export const addSavingsGoal = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    customer.savingsGoals.push({ goalAmount, currentAmount: 0, targetDate: new Date(targetDate) } as any);
+    customer.savingsGoals.push({ goalAmount, currentAmount: 0} as any);
     await customer.save();
 
     res.status(200).json(customer);
