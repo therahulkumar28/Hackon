@@ -123,7 +123,7 @@ export const updateSavings = async (req: Request, res: Response): Promise<void> 
     if (type === 'purchase') {
       transaction.purchaseSavings = savingsDetails;
       transaction.finalPrice = transaction.originalPrice - savingsDetails.reduce((sum: number, saving: { amount: number }) => sum + saving.amount, 0);
-    } else if (type === 'credit') {
+    } else  {
       transaction.creditSavings = savingsDetails;
     }
 

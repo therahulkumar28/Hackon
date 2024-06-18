@@ -26,5 +26,5 @@ router.put('/products/:id', updateProduct);
 router.delete('/products/:id', deleteProduct);
 
 // Route to buy a product by ID
-router.post('/products/:id/buy/:customerId', buyProduct);
+router.post('/products/:productId/buy/:customerId', buyProduct);
 export default router;
