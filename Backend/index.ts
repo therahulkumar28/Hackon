@@ -1,26 +1,32 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import cors from 'cors';
-import dotenv from 'dotenv'
-import connectDB from './config/db'
-dotenv.config()
-connectDB();
+import dotenv from 'dotenv';
+import connectDB from './config/db';
+import productRoutes from './routes/productsRoutes';
+import customerRoutes from './routes/customersRoutes';
+
+dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 5000;
 
+// Connect to MongoDB
+connectDB();
+
+// Middleware
 app.use(bodyParser.json());
-app.use(cors());
 
-// Example endpoint to fetch customer data
-app.get('/api/customers/:customerId/spending', (req, res) => {
-  const customerId = req.params.customerId;
-  // Fetch and process data here
-  // Example: const spendingData = fetchSpendingData(customerId);
-  const spendingData = { /* Processed spending data */ };
-  res.json(spendingData);
+// Routes
+app.use('/api', productRoutes);
+app.use('/api', customerRoutes);
+
+// Error handling middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port: ${port}`);
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
