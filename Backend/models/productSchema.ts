@@ -1,21 +1,19 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-interface IProduct extends Document {
+export interface IProduct extends Document {
   name: string;
   description: string;
   price: number;
   category: string;
+  discountThreshold?: number; // Optional: Threshold for automatic discount triggering
 }
 
-const ProductSchema: Schema = new Schema({
+const productSchema: Schema = new Schema({
   name: { type: String, required: true },
   description: { type: String, required: true },
   price: { type: Number, required: true },
   category: { type: String, required: true },
-},{
-  timestamps:true 
-});
+  discountThreshold: { type: Number }, // Optional field for discount threshold
+},{timestamps:true});
 
-const Product = mongoose.model<IProduct>('Product', ProductSchema);
-
-export default Product;
+export default mongoose.model<IProduct>('Product', productSchema);

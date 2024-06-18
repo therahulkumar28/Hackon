@@ -2,13 +2,12 @@ import { Router } from 'express';
 import {
   createCustomer,
   addTransaction,
-  addSavingsGoal,
   getMonthlySavings,
   getYearlySavings,
   getAllCustomers,
   getAllTransactions,
   getAllSavings,
-  getAllExpenditures
+  getAllExpenditure
 } from '../controllers/CustomersController';
 
 const router = Router();
@@ -19,8 +18,7 @@ router.post('/customers', createCustomer);
 // Add a transaction
 router.post('/customers/transaction', addTransaction);
 
-// Add a savings goal
-router.post('/customers/savingsGoal', addSavingsGoal);
+
 
 // Get monthly savings
 router.get('/customers/:customerId/monthlySavings', getMonthlySavings);
@@ -38,6 +36,6 @@ router.get('/customers/:customerId/transactions', getAllTransactions);
 router.get('/customers/:customerId/savings', getAllSavings);
 
 // Fetch all expenditures for a customer
-router.get('/customers/:customerId/expenditures', getAllExpenditures);
+router.get('/customers/:customerId/expenditures', getAllExpenditure);
 
 export default router;

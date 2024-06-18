@@ -1,50 +1,73 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-interface ITransaction extends Document {
-  type: 'spending' | 'saving';
+export interface ISavingDetail {
+  source: string;
   amount: number;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
-interface ISavingsGoal extends Document {
-  goalAmount: number;
-  currentAmount: number;
-  createdAt: Date;
-  updatedAt: Date;
+export interface ITransaction {
+  _id?:mongoose.Types.ObjectId;
+  productId: mongoose.Types.ObjectId;
+  productName: string;
+  type: 'purchase' | 'credit'; // 'purchase' or 'credit'
+  originalPrice: number;
+  finalPrice: number;
+  purchaseSavings: ISavingDetail[]; // Savings due to discounts on products
+  creditSavings: ISavingDetail[]; // Savings due to credits like credit cards, gift cards, etc.
+ 
 }
 
-interface ICustomer extends Document {
+export interface ICustomer extends Document {
   name: string;
   email: string;
   address: string;
   phone: string;
   transactions: ITransaction[];
-  savingsGoals: ISavingsGoal[];
   spendingLimit: number;
-  createdAt: Date;
-  updatedAt: Date;
+  thresholdLimit: number;
+  monthlySavings: {
+    year: number;
+    month: number;
+    totalSavings: number;
+  }[];
+  yearlySavings: {
+    year: number;
+    totalSavings: number;
+  }[];
 }
 
-const TransactionSchema: Schema = new Schema({
-  type: { type: String, enum: ['spending', 'saving'], required: true },
-  amount: { type: Number, required: true },
-}, { timestamps: true });
+const SavingDetailSchema: Schema = new Schema({
+  source: { type: String, required: true },
+  amount: { type: Number, required: true }
+});
 
-const SavingsGoalSchema: Schema = new Schema({
-  goalAmount: { type: Number, required: true },
-  currentAmount: { type: Number, default: 0 },
- 
+const TransactionSchema: Schema = new Schema({
+  productId: { type: mongoose.Types.ObjectId, required: true },
+  productName: { type: String, required: true },
+  type: { type: String, enum: ['purchase', 'credit'], required: true },
+  originalPrice: { type: Number, required: true },
+  finalPrice: { type: Number, required: true },
+  purchaseSavings: [SavingDetailSchema], // Savings due to discounts on products
+  creditSavings: [SavingDetailSchema], // Savings due to credits like credit cards, gift cards, etc.
 }, { timestamps: true });
 
 const CustomerSchema: Schema = new Schema({
   name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true },
   address: { type: String, required: true },
   phone: { type: String, required: true },
   transactions: [TransactionSchema],
-  savingsGoals: [SavingsGoalSchema],
-  spendingLimit: { type: Number, required: true }
+  spendingLimit: { type: Number, required: true },
+  thresholdLimit: { type: Number, required: true },
+  monthlySavings: [{
+    year: { type: Number, required: true },
+    month: { type: Number, required: true },
+    totalSavings: { type: Number, required: true }
+  }],
+  yearlySavings: [{
+    year: { type: Number, required: true },
+    totalSavings: { type: Number, required: true }
+  }]
 }, { timestamps: true });
 
 const Customer = mongoose.model<ICustomer>('Customer', CustomerSchema);

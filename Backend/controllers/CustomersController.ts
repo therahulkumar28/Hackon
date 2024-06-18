@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
-import Customer from '../models/customerSchema';
-import Product from '../models/productSchema';
+import Customer, { ICustomer } from '../models/customerSchema';
+import {  ISavingDetail , ITransaction } from '../models/customerSchema';
+
 // Create a new customer
 export const createCustomer = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, address, phone, spendingLimit } = req.body;
+    const { name, email, address, phone, spendingLimit, thresholdLimit } = req.body;
 
     const newCustomer = new Customer({
       name,
@@ -12,8 +13,10 @@ export const createCustomer = async (req: Request, res: Response): Promise<void>
       address,
       phone,
       transactions: [],
-      savingsGoals: [],
-      spendingLimit
+      spendingLimit,
+      thresholdLimit,
+      monthlySavings: [],
+      yearlySavings: []
     });
 
     await newCustomer.save();
@@ -23,29 +26,73 @@ export const createCustomer = async (req: Request, res: Response): Promise<void>
   }
 };
 
-// Add a transaction
+// Add a transaction (purchase a product or credit)
 export const addTransaction = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { customerId, productId } = req.body;
+    const { customerId, type, productId, productName, originalPrice, savingsDetails } = req.body;
     const customer = await Customer.findById(customerId);
-    const product = await Product.findById(productId);
 
     if (!customer) {
       res.status(404).json({ message: 'Customer not found' });
       return;
     }
 
-    if (!product) {
-      res.status(404).json({ message: 'Product not found' });
-      return;
+    let transaction: ITransaction | undefined;
+
+    if (type === 'purchase') {
+      const discountSavings = savingsDetails.filter((saving: ISavingDetail) => saving.source === 'discount');
+      const creditSavings = savingsDetails.filter((saving: ISavingDetail) => saving.source !== 'discount');
+
+      transaction = {
+        productId,
+        productName,
+        type,
+        originalPrice,
+        finalPrice: originalPrice - discountSavings.reduce((sum: number, saving: ISavingDetail) => sum + saving.amount, 0),
+        purchaseSavings: discountSavings,
+        creditSavings: creditSavings
+      };
+    } else if (type === 'credit') {
+      transaction = {
+        productId,
+        productName,
+        type,
+        originalPrice,
+        finalPrice: 0, // Assuming credits don't affect final price
+        purchaseSavings: [],
+        creditSavings: savingsDetails
+      };
     }
 
-    const discountAmount = product.price * (product.discount / 100);
-    const spendingAmount = product.price - discountAmount;
+    if (transaction) {
+      customer.transactions.push(transaction);
+      await customer.save();
 
-    customer.transactions.push({ type: 'saving', amount: discountAmount, date: new Date() } as any);
-    customer.transactions.push({ type: 'expense', amount: spendingAmount, date: new Date() } as any);
-    await customer.save();
+      // Update monthly and yearly savings
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+
+      // Update monthly savings
+      const existingMonthlySavings = customer.monthlySavings.find(s => s.year === year && s.month === month);
+      const totalSavings = savingsDetails.reduce((sum: number, saving: ISavingDetail) => sum + saving.amount, 0);
+
+      if (existingMonthlySavings) {
+        existingMonthlySavings.totalSavings += totalSavings;
+      } else {
+        customer.monthlySavings.push({ year, month, totalSavings });
+      }
+
+      // Update yearly savings
+      const existingYearlySavings = customer.yearlySavings.find(s => s.year === year);
+      if (existingYearlySavings) {
+        existingYearlySavings.totalSavings += totalSavings;
+      } else {
+        customer.yearlySavings.push({ year, totalSavings });
+      }
+
+      await customer.save();
+    }
 
     res.status(200).json(customer);
   } catch (error) {
@@ -53,10 +100,46 @@ export const addTransaction = async (req: Request, res: Response): Promise<void>
   }
 };
 
-// Add a savings goal
-export const addSavingsGoal = async (req: Request, res: Response): Promise<void> => {
+// Update savings for a transaction
+export const updateSavings = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { customerId, goalAmount} = req.body;
+    const { customerId, transactionId, type, savingsDetails } = req.body;
+    const customer: ICustomer | null = await Customer.findById(customerId);
+
+    if (!customer) {
+      res.status(404).json({ message: 'Customer not found' });
+      return;
+    }
+
+    // Find the transaction by ID within customer's transactions array
+    const transaction = customer.transactions.find(t => t._id?.equals(transactionId));
+
+    if (!transaction) {
+      res.status(404).json({ message: 'Transaction not found' });
+      return;
+    }
+
+    // Update savings details based on transaction type
+    if (type === 'purchase') {
+      transaction.purchaseSavings = savingsDetails;
+      transaction.finalPrice = transaction.originalPrice - savingsDetails.reduce((sum: number, saving: { amount: number }) => sum + saving.amount, 0);
+    } else if (type === 'credit') {
+      transaction.creditSavings = savingsDetails;
+    }
+
+    // Save the updated customer document
+    await customer.save();
+
+    // Respond with the updated customer object (you may choose to respond with the updated transaction instead)
+    res.status(200).json(customer);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating savings', error: error });
+  }
+};
+
+export const getAllExpenditure = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { customerId } = req.params;
     const customer = await Customer.findById(customerId);
 
     if (!customer) {
@@ -64,16 +147,19 @@ export const addSavingsGoal = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    customer.savingsGoals.push({ goalAmount, currentAmount: 0} as any);
-    await customer.save();
+    // Filter transactions to include only 'purchase' type
+    const expenditureTransactions = customer.transactions.filter((transaction: ITransaction) => transaction.type === 'purchase');
 
-    res.status(200).json(customer);
+    // Calculate total expenditure
+    const totalExpenditure = expenditureTransactions.reduce((total: number, transaction: ITransaction) => total + transaction.finalPrice, 0);
+
+    res.status(200).json({ totalExpenditure });
   } catch (error) {
-    res.status(500).json({ message: 'Error adding savings goal', error: error });
+    res.status(500).json({ message: 'Error fetching expenditure', error: error });
   }
 };
 
-// Get monthly savings
+// Fetch monthly savings for a customer
 export const getMonthlySavings = async (req: Request, res: Response): Promise<void> => {
   try {
     const { customerId } = req.params;
@@ -84,26 +170,13 @@ export const getMonthlySavings = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    const monthlySavings = await Customer.aggregate([
-      { $match: { _id: customer._id } },
-      { $unwind: '$transactions' },
-      { $match: { 'transactions.type': 'saving' } },
-      {
-        $group: {
-          _id: { year: { $year: '$transactions.createdAt' }, month: { $month: '$transactions.createdAt' } },
-          totalSavings: { $sum: '$transactions.amount' }
-        }
-      },
-      { $sort: { '_id.year': 1, '_id.month': 1 } }
-    ]);
-
-    res.status(200).json(monthlySavings);
+    res.status(200).json(customer.monthlySavings);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching monthly savings', error: error });
   }
 };
 
-// Get yearly savings
+// Fetch yearly savings for a customer
 export const getYearlySavings = async (req: Request, res: Response): Promise<void> => {
   try {
     const { customerId } = req.params;
@@ -114,20 +187,7 @@ export const getYearlySavings = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    const yearlySavings = await Customer.aggregate([
-      { $match: { _id: customer._id } },
-      { $unwind: '$transactions' },
-      { $match: { 'transactions.type': 'saving' } },
-      {
-        $group: {
-          _id: { year: { $year: '$transactions.createdAt' } },
-          totalSavings: { $sum: '$transactions.amount' }
-        }
-      },
-      { $sort: { '_id.year': 1 } }
-    ]);
-
-    res.status(200).json(yearlySavings);
+    res.status(200).json(customer.yearlySavings);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching yearly savings', error: error });
   }
@@ -142,8 +202,6 @@ export const getAllCustomers = async (req: Request, res: Response): Promise<void
     res.status(500).json({ message: 'Error fetching customers', error: error });
   }
 };
-
-// Fetch all transactions for a customer
 export const getAllTransactions = async (req: Request, res: Response): Promise<void> => {
   try {
     const { customerId } = req.params;
@@ -171,15 +229,33 @@ export const getAllSavings = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const savings = customer.transactions.filter(transaction => transaction.type === 'saving');
+    const savings = {
+      purchaseSavings: [] as { productName: string; savings: ISavingDetail[] }[], // Initialize as empty array
+      creditSavings: [] as { productName: string; savings: ISavingDetail[] }[] // Initialize as empty array
+    };
+
+    customer.transactions.forEach((transaction: ITransaction) => {
+      if (transaction.type === 'purchase') {
+        savings.purchaseSavings.push({
+          productName: transaction.productName,
+          savings: transaction.purchaseSavings
+        });
+      } else if (transaction.type === 'credit') {
+        savings.creditSavings.push({
+          productName: transaction.productName,
+          savings: transaction.creditSavings
+        });
+      }
+    });
+
     res.status(200).json(savings);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching savings', error: error });
   }
 };
 
-// Fetch all expenditures for a customer
-export const getAllExpenditures = async (req: Request, res: Response): Promise<void> => {
+// Fetch customer by ID
+export const getCustomerById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { customerId } = req.params;
     const customer = await Customer.findById(customerId);
@@ -189,9 +265,43 @@ export const getAllExpenditures = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    const expenditures = customer.transactions.filter(transaction => transaction.type === 'spending');
-    res.status(200).json(expenditures);
+    res.status(200).json(customer);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching expenditures', error: error });
+    res.status(500).json({ message: 'Error fetching customer', error: error });
+  }
+};
+
+// Update customer details
+export const updateCustomer = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { customerId } = req.params;
+    const { name, email, address, phone, spendingLimit, thresholdLimit } = req.body;
+    const customer = await Customer.findByIdAndUpdate(customerId, { name, email, address, phone, spendingLimit, thresholdLimit }, { new: true });
+
+    if (!customer) {
+      res.status(404).json({ message: 'Customer not found' });
+      return;
+    }
+
+    res.status(200).json(customer);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating customer', error: error });
+  }
+};
+
+// Delete customer
+export const deleteCustomer = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { customerId } = req.params;
+    const customer = await Customer.findByIdAndDelete(customerId);
+
+    if (!customer) {
+      res.status(404).json({ message: 'Customer not found' });
+      return;
+    }
+
+    res.status(200).json({ message: 'Customer deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting customer', error: error });
   }
 };
