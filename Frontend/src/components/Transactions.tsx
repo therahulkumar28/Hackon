@@ -18,7 +18,13 @@ const Transactions: React.FC = () => {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const itemsPerPage = 5;
+  const [currency, setCurrency] = useState('INR');
+  const itemsPerPage = 4;
+
+  const exchangeRates = {
+    INR: 1,
+    USD: 0.012, // Example exchange rate, 1 INR = 0.012 USD
+  };
 
   useEffect(() => {
     fetchAllTransactions();
@@ -46,9 +52,27 @@ const Transactions: React.FC = () => {
     setCurrentPage(page);
   };
 
+  const handleCurrencyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setCurrency(event.target.value);
+  };
+
+  const convertCurrency = (amount: number, from: string, to: string) => {
+    if (from === to) {
+      return amount;
+    }
+    const conversionRate = exchangeRates[to] / exchangeRates[from];
+    return amount * conversionRate;
+  };
+
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Transaction History</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">Transaction History</h2>
+        <select value={currency} onChange={handleCurrencyChange} className="p-2 border rounded-lg">
+          <option value="INR">INR</option>
+          <option value="USD">USD</option>
+        </select>
+      </div>
       {currentTransactions.length === 0 && !loading ? (
         <p>No transactions found.</p>
       ) : (
@@ -56,10 +80,10 @@ const Transactions: React.FC = () => {
           {currentTransactions.map((transaction) => (
             <li key={transaction._id} className="p-4 border rounded-lg shadow-md">
               <p><strong>Product:</strong> {transaction.productName}</p>
-              <p><strong>Original Price:</strong> ${transaction.originalPrice}</p>
-              <p><strong>Final Price:</strong> ${transaction.finalPrice}</p>
-              <p><strong>Purchase Savings:</strong> {transaction.purchaseSavings.map((s) => `${s.source}: $${s.amount}`).join(', ')}</p>
-              <p><strong>Credit Savings:</strong> {transaction.creditSavings.map((s) => `${s.source}: $${s.amount}`).join(', ')}</p>
+              <p><strong>Original Price:</strong> {currency} {convertCurrency(transaction.originalPrice, 'INR', currency).toFixed(2)}</p>
+              <p><strong>Final Price:</strong> {currency} {convertCurrency(transaction.finalPrice, 'INR', currency).toFixed(2)}</p>
+              <p><strong>Purchase Savings:</strong> {transaction.purchaseSavings.map((s) => `${s.source}: ${currency} ${convertCurrency(s.amount, 'INR', currency).toFixed(2)}`).join(', ')}</p>
+              <p><strong>Credit Savings:</strong> {transaction.creditSavings.map((s) => `${s.source}: ${currency} ${convertCurrency(s.amount, 'INR', currency).toFixed(2)}`).join(', ')}</p>
               <p><strong>Date:</strong> {new Date(transaction.createdAt).toLocaleDateString()}</p>
             </li>
           ))}

@@ -11,7 +11,7 @@ interface Transaction {
   type: string;
   originalPrice: number;
   finalPrice: number;
-  category : string ;
+  category: string;
   purchaseSavings: { source: string; amount: number }[];
   creditSavings: { source: string; amount: number }[];
   createdAt: string;
@@ -21,6 +21,12 @@ const SavingsGraph: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>('2024');
   const [years, setYears] = useState<string[]>([]);
+  const [currency, setCurrency] = useState<string>('INR');
+
+  const exchangeRates = {
+    INR: 1,
+    USD: 0.012, // Example exchange rate, 1 INR = 0.012 USD
+  };
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -60,30 +66,38 @@ const SavingsGraph: React.FC = () => {
     return acc;
   }, {});
 
+  const convertCurrency = (amount: number, from: string, to: string) => {
+    if (from === to) {
+      return amount;
+    }
+    const conversionRate = exchangeRates[to] / exchangeRates[from];
+    return amount * conversionRate;
+  };
+
   const labels = Object.keys(groupedData);
-  const totalExpenditureData = labels.map(label => groupedData[label].totalExpenditure);
-  const discountSavingsData = labels.map(label => groupedData[label].discountSavings);
-  const creditSavingsData = labels.map(label => groupedData[label].creditSavings);
+  const totalExpenditureData = labels.map(label => convertCurrency(groupedData[label].totalExpenditure, 'INR', currency));
+  const discountSavingsData = labels.map(label => convertCurrency(groupedData[label].discountSavings, 'INR', currency));
+  const creditSavingsData = labels.map(label => convertCurrency(groupedData[label].creditSavings, 'INR', currency));
 
   const data = {
     labels,
     datasets: [
       {
-        label: 'Total Expenditure',
+        label: `Total Expenditure (${currency})`,
         backgroundColor: 'rgba(75, 192, 192, 0.2)',
         borderColor: 'rgba(75, 192, 192, 1)',
         borderWidth: 1,
         data: totalExpenditureData,
       },
       {
-        label: 'Savings due to Discounts',
+        label: `Savings due to Discounts (${currency})`,
         backgroundColor: 'rgba(255, 99, 132, 0.2)',
         borderColor: 'rgba(255, 99, 132, 1)',
         borderWidth: 1,
         data: discountSavingsData,
       },
       {
-        label: 'Savings due to Credits',
+        label: `Savings due to Credits (${currency})`,
         backgroundColor: 'rgba(54, 162, 235, 0.2)',
         borderColor: 'rgba(54, 162, 235, 1)',
         borderWidth: 1,
@@ -115,22 +129,36 @@ const SavingsGraph: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center w-full h-full p-4">
       <h2 className="text-xl font-bold mb-4">Monthly Savings and Expenditure</h2>
-      <div className="mb-4">
-        <label htmlFor="yearSelect" className="mr-2">Select Year:</label>
-        <select
-          id="yearSelect"
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(e.target.value)}
-          className="p-2 border border-gray-300 rounded"
-        >
-          {years.map(year => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
+      <div className="flex mb-4">
+        <div className="mr-4">
+          <label htmlFor="yearSelect" className="mr-2">Select Year:</label>
+          <select
+            id="yearSelect"
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value)}
+            className="p-2 border border-gray-300 rounded"
+          >
+            {years.map(year => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="currencySelect" className="mr-2">Select Currency:</label>
+          <select
+            id="currencySelect"
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            className="p-2 border border-gray-300 rounded"
+          >
+            <option value="INR">INR</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
       </div>
-      <div className="w-full  h-96">
+      <div className="w-full h-96">
         <Bar data={data} options={options} />
       </div>
     </div>
