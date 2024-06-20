@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Chart, CategoryScale, LinearScale, LogarithmicScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
-import axios from 'axios';
+import axiosInstance from '../config/axios';
 
 Chart.register(CategoryScale, LinearScale, LogarithmicScale, BarElement, Title, Tooltip, Legend);
 
@@ -25,7 +25,7 @@ const SavingsGraph: React.FC = () => {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/transactions');
+        const response = await axiosInstance.get(`/customers/6673d641b5ce57594b4523c2/transactions`);
         setTransactions(response.data);
         const uniqueYears: string[] = Array.from(new Set(response.data.map((transaction: Transaction) => new Date(transaction.createdAt).getFullYear().toString())));
         setYears(uniqueYears.sort((a, b) => parseInt(b) - parseInt(a)));
@@ -130,7 +130,7 @@ const SavingsGraph: React.FC = () => {
           ))}
         </select>
       </div>
-      <div className="w-full lg:w-3/4 xl:w-1/2 h-96">
+      <div className="w-full  h-96">
         <Bar data={data} options={options} />
       </div>
     </div>

@@ -1,6 +1,5 @@
-// SetLimits.tsx
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../config/axios';
 
 const SetLimits: React.FC = () => {
   const [yearlyPurchaseLimit, setYearlyPurchaseLimit] = useState<number>();
@@ -9,10 +8,10 @@ const SetLimits: React.FC = () => {
   const [customerId, setCustomerId] = useState<string>(''); // Assume this is fetched from authentication context
 
   useEffect(() => {
-    setCustomerId('6673c61e2cd79174d51aaa87')
+    setCustomerId('6673d641b5ce57594b4523c2')
     const fetchLimits = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/api/customers/${customerId}/purchase-limit`);
+        const response = await axiosInstance.get(`/customers/${customerId}/purchase-limit`);
         setYearlyPurchaseLimit(response.data.spendingLimit);
         setthresholdLimit(response.data.thresholdLimit)
         setSpendingNotifications(response.data.spendingNotifications);
@@ -28,7 +27,7 @@ const SetLimits: React.FC = () => {
 
   const saveLimits = async () => {
     try {
-      await axios.put(`http://localhost:3000/api/customers/${customerId}/purchase-limit`, {
+      await axiosInstance.put(`/customers/${customerId}/purchase-limit`, {
         spendingLimit :yearlyPurchaseLimit,
         thresholdLimit:thresholdLimit ,
         spendingNotifications : spendingNotifications 
@@ -47,7 +46,7 @@ const SetLimits: React.FC = () => {
           Yearly Purchase Limit:
         </label>
         <input
-          type="number"
+          type="text"
           id="yearlyPurchaseLimit"
           value={yearlyPurchaseLimit}
           placeholder='Enter Your Limit'
@@ -60,7 +59,7 @@ const SetLimits: React.FC = () => {
           Threshold Limit:
         </label>
         <input
-          type="number"
+          type="text"
           id="thresholdLimit"
           value={thresholdLimit}
           placeholder='Enter Your Limit (Optional) This is to inform you just before'

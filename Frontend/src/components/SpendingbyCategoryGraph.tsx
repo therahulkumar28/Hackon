@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import axiosInstance from '../config/axios';
 
 interface SpendingCategory {
   totalExpenditure: number;
@@ -20,7 +20,7 @@ const SpendingByCategory: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/spending-by-category'); // Replace with actual customer ID
+        const response = await axiosInstance.get('/customers/6673d641b5ce57594b4523c2/spending-by-category'); // Replace with actual customer ID
         setData(response.data);
       } catch (error) {
         console.error('Error fetching data', error);
