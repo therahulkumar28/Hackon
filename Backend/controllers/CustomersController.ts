@@ -5,7 +5,18 @@ import {  ISavingDetail , ITransaction } from '../models/customerSchema';
 // Create a new customer
 export const createCustomer = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, address, phone, spendingLimit, thresholdLimit } = req.body;
+    const { name, email, address, phone, spendingLimit, spendingNotifications, thresholdLimit } = req.body;
+
+    // Check if a customer already exists with the given email or phone number
+    const existingCustomer = await Customer.findOne({
+      $or: [{ email: email }, { phone: phone }]
+    });
+
+    if (existingCustomer) {
+      // If customer already exists, return a 409 Conflict status
+     res.status(409).json({ message: 'Customer already exists with the provided email or phone number.' });
+     return ;
+    }
 
     const newCustomer = new Customer({
       name,
@@ -15,6 +26,7 @@ export const createCustomer = async (req: Request, res: Response): Promise<void>
       transactions: [],
       spendingLimit,
       thresholdLimit,
+      spendingNotifications,
       monthlySavings: [],
       yearlySavings: []
     });
@@ -53,7 +65,8 @@ export const addTransaction = async (req: Request, res: Response): Promise<void>
         originalPrice,
         finalPrice: originalPrice - totalSavings ,
         purchaseSavings: discountSavings,
-        creditSavings: creditSavings
+        creditSavings: creditSavings,
+      
       };
     } else  {
       transaction = {
@@ -70,30 +83,60 @@ export const addTransaction = async (req: Request, res: Response): Promise<void>
     if (transaction) {
       customer.transactions.push(transaction);
       await customer.save();
-
+      if (!customer.monthlySavings) {
+        customer.monthlySavings = [];
+      }
+      
+      if (!customer.yearlySavings) {
+        customer.yearlySavings = [];
+      }
       // Update monthly and yearly savings
       const now = new Date();
       const year = now.getFullYear();
       const month = now.getMonth() + 1;
 
       // Update monthly savings
-      const existingMonthlySavings = customer.monthlySavings.find(s => s.year === year && s.month === month);
-      const totalSavings = savingsDetails.reduce((sum: number, saving: ISavingDetail) => sum + saving.amount, 0);
-
-      if (existingMonthlySavings) {
-        existingMonthlySavings.totalSavings += totalSavings;
-      } else {
-        customer.monthlySavings.push({ year, month, totalSavings });
-      }
-
-      // Update yearly savings
-      const existingYearlySavings = customer.yearlySavings.find(s => s.year === year);
-      if (existingYearlySavings) {
-        existingYearlySavings.totalSavings += totalSavings;
-      } else {
-        customer.yearlySavings.push({ year, totalSavings });
-      }
-
+        // Update monthly savings
+        const existingMonthlySavings = customer.monthlySavings.find(s => s.year === year && s.month === month);
+        const totalSavings = savingsDetails.reduce((sum: number, saving: ISavingDetail) => sum + saving.amount, 0);
+        const totalExpenditure = transaction.type === 'purchase' ? transaction.finalPrice : 0;
+        const totalDiscountSavings = savingsDetails.filter((saving: ISavingDetail) => saving.source === 'discount').reduce((sum: number, saving: ISavingDetail) => sum + saving.amount, 0);
+        const totalCreditSavings = savingsDetails.filter((saving: ISavingDetail) => saving.source !== 'discount').reduce((sum: number, saving: ISavingDetail) => sum + saving.amount, 0);
+     
+        if (existingMonthlySavings) {
+          existingMonthlySavings.totalSavings += totalSavings;
+          existingMonthlySavings.discountSavings += totalDiscountSavings;
+          existingMonthlySavings.creditSavings += totalCreditSavings;
+          existingMonthlySavings.totalExpenditure += totalExpenditure;
+        } else {
+          customer.monthlySavings.push({
+            year,
+            month,
+            totalSavings,
+            discountSavings: totalDiscountSavings,
+            creditSavings: totalCreditSavings,
+            totalExpenditure,
+          });
+        }
+  
+        // Update yearly savings
+        const existingYearlySavings = customer.yearlySavings.find(s => s.year === year);
+        if (existingYearlySavings) {
+          existingYearlySavings.totalSavings += totalSavings;
+          existingYearlySavings.discountSavings += totalDiscountSavings;
+          existingYearlySavings.creditSavings += totalCreditSavings;
+          existingYearlySavings.totalExpenditure += totalExpenditure;
+        } else {
+          customer.yearlySavings.push({
+            year,
+            totalSavings,
+            discountSavings: totalDiscountSavings,
+            creditSavings: totalCreditSavings,
+            totalExpenditure: totalExpenditure,
+          });
+        }
+  
+      
       await customer.save();
     }
 
@@ -205,6 +248,7 @@ export const getAllCustomers = async (req: Request, res: Response): Promise<void
     res.status(500).json({ message: 'Error fetching customers', error: error });
   }
 };
+// get transactions for customers
 export const getAllTransactions = async (req: Request, res: Response): Promise<void> => {
   try {
     const { customerId } = req.params;
@@ -306,5 +350,43 @@ export const deleteCustomer = async (req: Request, res: Response): Promise<void>
     res.status(200).json({ message: 'Customer deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting customer', error: error });
+  }
+};
+//setPurchaseLimit
+export const setPurchaseLimit = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const {spendingLimit , thresholdLimit , spendingNotifications} = req.body;
+    const customer = await Customer.findById(id);
+    
+    if (!customer) {
+      res.status(404).json({ message: 'Customer not found' });
+      return;
+    }
+
+    customer.spendingLimit = spendingLimit;
+    customer.thresholdLimit = thresholdLimit ;
+    customer.spendingNotifications = spendingNotifications;
+    await customer.save();
+
+    res.status(200).json(customer);
+  } catch (error) {
+    res.status(500).json({ message: 'Error setting purchase limit', error });
+  }
+};
+// getPurchaseLimit
+export const getPurchaseLimit = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const customer = await Customer.findById(id, 'spendingLimit  thresholdLimit spendingNotifications');
+
+    if (!customer) {
+      res.status(404).json({ message: 'Customer not found' });
+      return;
+    }
+
+    res.status(200).json(customer);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching purchase limit', error });
   }
 };

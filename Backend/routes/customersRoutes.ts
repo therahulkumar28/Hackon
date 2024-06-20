@@ -7,8 +7,11 @@ import {
   getAllCustomers,
   getAllTransactions,
   getAllSavings,
-  getAllExpenditure
+  getAllExpenditure,
+  setPurchaseLimit ,
+  getPurchaseLimit ,
 } from '../controllers/CustomersController';
+import { checkThresholds } from '../middlewares/notificationMiddleware';
 
 const router = Router();
 
@@ -16,7 +19,7 @@ const router = Router();
 router.post('/customers', createCustomer);
 
 // Add a transaction
-router.post('/customers/transaction', addTransaction);
+router.post('/customers/transaction',  checkThresholds ,addTransaction);
 
 
 
@@ -37,5 +40,12 @@ router.get('/customers/:customerId/savings', getAllSavings);
 
 // Fetch all expenditures for a customer
 router.get('/customers/:customerId/expenditures', getAllExpenditure);
+
+
+// setPurchaseLimit
+router.put('/customers/:id/purchase-limit', setPurchaseLimit);
+
+//getPurchaseLimit 
+router.get('/customers/:id/purchase-limit', getPurchaseLimit);
 
 export default router;

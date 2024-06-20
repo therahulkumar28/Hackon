@@ -5,7 +5,7 @@ import {
   getProductById,
   updateProduct,
   deleteProduct,
-  buyProduct
+ 
 } from '../controllers/productsController';
 
 const router = express.Router();
@@ -26,5 +26,5 @@ router.put('/products/:id', updateProduct);
 router.delete('/products/:id', deleteProduct);
 
 // Route to buy a product by ID
-router.post('/products/:productId/buy/:customerId', buyProduct);
+//router.post('/products/:productId/buy/:customerId', buyProduct);
 export default router;

@@ -14,7 +14,7 @@ export interface ITransaction {
   finalPrice: number;
   purchaseSavings: ISavingDetail[]; // Savings due to discounts on products
   creditSavings: ISavingDetail[]; // Savings due to credits like credit cards, gift cards, etc.
- 
+  createdAt? : Date ;
 }
 
 export interface ICustomer extends Document {
@@ -25,14 +25,21 @@ export interface ICustomer extends Document {
   transactions: ITransaction[];
   spendingLimit: number;
   thresholdLimit: number;
+  spendingNotifications:string 
   monthlySavings: {
     year: number;
     month: number;
+    discountSavings?: number ;
+    creditSavings?: number; 
     totalSavings: number;
+    totalExpenditure: number;
   }[];
   yearlySavings: {
     year: number;
+    discountSavings?: number ;
+    creditSavings?: number;
     totalSavings: number;
+    totalExpenditure: number;
   }[];
 }
 
@@ -59,14 +66,21 @@ const CustomerSchema: Schema = new Schema({
   transactions: [TransactionSchema],
   spendingLimit: { type: Number, required: true },
   thresholdLimit: { type: Number, required: true },
+  spendingNotifications : {type : String },
   monthlySavings: [{
     year: { type: Number, required: true },
     month: { type: Number, required: true },
-    totalSavings: { type: Number, required: true }
+    discountSavings: {type : Number } ,
+    creditSavings: {type : Number  } ,
+    totalSavings: { type: Number, required: true },
+    totalExpenditure : {type : Number}
   }],
   yearlySavings: [{
     year: { type: Number, required: true },
-    totalSavings: { type: Number, required: true }
+    discountSavings: {type : Number  } ,
+    creditSavings: {type : Number  } ,
+    totalSavings: { type: Number, required: true },
+    totalExpenditure : {type : Number}
   }]
 }, { timestamps: true });
 

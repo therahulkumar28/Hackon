@@ -24,7 +24,7 @@ const SavingsGraph: React.FC = () => {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/customers/66713089826e5eb033b0af8d/transactions');
+        const response = await axios.get('http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/transactions');
         setTransactions(response.data);
         const uniqueYears: string[] = Array.from(new Set(response.data.map((transaction: Transaction) => new Date(transaction.createdAt).getFullYear().toString())));
         setYears(uniqueYears.sort((a, b) => parseInt(b) - parseInt(a))); // Sort years in descending order

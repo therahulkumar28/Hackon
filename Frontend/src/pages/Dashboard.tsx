@@ -2,6 +2,7 @@ import React from 'react';
 
 
 import SavingsGraph from '../components/SavingsGraph';
+import SetLimits from '../components/setLimits';
 
 const Dashboard: React.FC = () => {
  // const [customer, setCustomer] = useState<any>(null);
@@ -22,6 +23,9 @@ const Dashboard: React.FC = () => {
     <div className="App">
       <h1>Customer Savings and Expenditure</h1>
       <SavingsGraph  />
+      <br></br>
+      <br></br>
+      <SetLimits/>
     </div>
   );
 };
