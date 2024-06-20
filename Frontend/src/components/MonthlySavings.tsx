@@ -1,26 +1,26 @@
-import  { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Bar } from 'react-chartjs-2';
 
 interface Transaction {
-    productId: string;
-    productName: string;
-    type: string;
-    originalPrice: number;
-    finalPrice: number;
-    category: string;
-    purchaseSavings: { source: string; amount: number }[];
-    creditSavings: { source: string; amount: number }[];
-    createdAt: string;
-  }
+  productId: string;
+  productName: string;
+  type: string;
+  originalPrice: number;
+  finalPrice: number;
+  category: string;
+  purchaseSavings: { source: string; amount: number }[];
+  creditSavings: { source: string; amount: number }[];
+  createdAt: string;
+}
 
 const TransactionGraph = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
-  const [monthOptions, setMonthOptions] = useState([]);
-  const [yearOptions, setYearOptions] = useState([]);
-  const [selectedMonth, setSelectedMonth] = useState('');
-  const [selectedYear, setSelectedYear] = useState('');
+  const [monthOptions, setMonthOptions] = useState<number[]>([]);
+  const [yearOptions, setYearOptions] = useState<number[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const [selectedYear, setSelectedYear] = useState<string>('');
 
   useEffect(() => {
     fetchTransactionOptions();
@@ -29,7 +29,7 @@ const TransactionGraph = () => {
   const fetchTransactionOptions = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/transactions`);
+      const response = await axios.get<Response[]>(`http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/transactions`);
       const sortedTransactions = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       const uniqueMonths = Array.from(new Set(sortedTransactions.map(transaction => new Date(transaction.createdAt).getMonth() + 1)));
       const uniqueYears = Array.from(new Set(sortedTransactions.map(transaction => new Date(transaction.createdAt).getFullYear())));
@@ -44,7 +44,7 @@ const TransactionGraph = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/transactions`);
+      const response = await axios.get<Transaction[]>(`http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/transactions`);
       setTransactions(response.data);
     } catch (error) {
       console.error('Error fetching transactions:', error);
@@ -52,15 +52,15 @@ const TransactionGraph = () => {
     setLoading(false);
   };
 
-  const handleMonthChange = (event) => {
+  const handleMonthChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedMonth(event.target.value);
   };
 
-  const handleYearChange = (event) => {
+  const handleYearChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedYear(event.target.value);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     fetchData();
   };

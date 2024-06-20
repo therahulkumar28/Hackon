@@ -62,7 +62,7 @@ const SpendingByCategory: React.FC = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl mb-4">Spending by Category</h1>
+      {/* {<h1 className="text-2xl mb-4">Spending by Category</h1>} */}
       <div className="mb-4">
         <select onChange={handleCategoryChange} className="p-2 border border-gray-300 mr-4">
           <option value="">Select a category</option>
