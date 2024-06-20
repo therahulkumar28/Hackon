@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { Chart, CategoryScale, LinearScale, LogarithmicScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import axios from 'axios';
 
-Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+Chart.register(CategoryScale, LinearScale, LogarithmicScale, BarElement, Title, Tooltip, Legend);
 
 interface Transaction {
   productId: string;
@@ -11,6 +11,7 @@ interface Transaction {
   type: string;
   originalPrice: number;
   finalPrice: number;
+  category : string ;
   purchaseSavings: { source: string; amount: number }[];
   creditSavings: { source: string; amount: number }[];
   createdAt: string;
@@ -27,7 +28,7 @@ const SavingsGraph: React.FC = () => {
         const response = await axios.get('http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/transactions');
         setTransactions(response.data);
         const uniqueYears: string[] = Array.from(new Set(response.data.map((transaction: Transaction) => new Date(transaction.createdAt).getFullYear().toString())));
-        setYears(uniqueYears.sort((a, b) => parseInt(b) - parseInt(a))); 
+        setYears(uniqueYears.sort((a, b) => parseInt(b) - parseInt(a)));
         if (uniqueYears.length > 0) {
           setSelectedYear(uniqueYears[0]);
         }
@@ -41,10 +42,10 @@ const SavingsGraph: React.FC = () => {
 
   const filteredTransactions = transactions.filter(transaction => new Date(transaction.createdAt).getFullYear().toString() === selectedYear);
 
-  const groupedData = filteredTransactions.reduce((acc : any , transaction) => {
+  const groupedData = filteredTransactions.reduce((acc: { [key: string]: { totalExpenditure: number; discountSavings: number; creditSavings: number } }, transaction) => {
     const month = new Date(transaction.createdAt).toLocaleString('default', { month: 'short' });
     const key = `${month} ${selectedYear}`;
-
+  
     if (!acc[key]) {
       acc[key] = {
         totalExpenditure: 0,
@@ -52,7 +53,6 @@ const SavingsGraph: React.FC = () => {
         creditSavings: 0,
       };
     }
-
     acc[key].totalExpenditure += transaction.finalPrice;
     acc[key].discountSavings += transaction.purchaseSavings.reduce((sum, saving) => sum + saving.amount, 0);
     acc[key].creditSavings += transaction.creditSavings.reduce((sum, saving) => sum + saving.amount, 0);
@@ -97,7 +97,17 @@ const SavingsGraph: React.FC = () => {
     maintainAspectRatio: false,
     scales: {
       y: {
+        type: 'logarithmic' as const,
         beginAtZero: true,
+        ticks: {
+          callback: function(value: number | string) {
+            const numericValue = Number(value);
+            if ([10, 100, 1000, 10000].includes(numericValue)) {
+              return numericValue;
+            }
+            return null;
+          }
+        }
       },
     },
   };
