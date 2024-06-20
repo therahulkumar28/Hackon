@@ -11,6 +11,7 @@ import {
   setPurchaseLimit ,
   getPurchaseLimit, 
   getSpendingByCategory,
+  getCustomerById,
 } from '../controllers/CustomersController';
 import { checkThresholds } from '../middlewares/notificationMiddleware';
 
@@ -22,7 +23,8 @@ router.post('/customers', createCustomer);
 // Add a transaction
 router.post('/customers/transaction',  checkThresholds ,addTransaction);
 
-
+// Get CustomerbyId 
+router.get('/customers/:customerId',getCustomerById)
 
 // Get monthly savings
 router.get('/customers/:customerId/monthlySavings', getMonthlySavings);

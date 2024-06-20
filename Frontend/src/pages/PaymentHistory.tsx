@@ -1,3 +1,5 @@
+import CustomerDetails from "../components/CustomerDetail"
+import TransactionGraph from "../components/MonthlySavings"
 import PaymentAppbar from "../components/PaymentAppbar"
 import SavingsGraph from "../components/SavingsGraph"
 import SpendingByCategory from "../components/SpendingbyCategoryGraph"
@@ -12,6 +14,8 @@ const PaymentHistory = () => {
         <SavingsGraph/>
         <SpendingByCategory/>
         <Transaction/>
+        <TransactionGraph/>
+        <CustomerDetails/>
     </div>
   )
 }
