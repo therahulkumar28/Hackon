@@ -4,6 +4,8 @@ import React from 'react';
 import SavingsGraph from '../components/SavingsGraph';
 import SetLimits from '../components/setLimits';
 import SpendingByCategory from '../components/SpendingbyCategoryGraph';
+import Appbar from '../components/Appbar';
+import Hero from '../components/Hero';
 
 const Dashboard: React.FC = () => {
  // const [customer, setCustomer] = useState<any>(null);
@@ -22,6 +24,8 @@ const Dashboard: React.FC = () => {
 //  const customerId = '66713089826e5eb033b0af8d';
   return (
     <div className="App">
+      <Appbar/>
+      <Hero/>
       <h1>Customer Savings and Expenditure</h1>
       <SavingsGraph  />
       <br></br>
