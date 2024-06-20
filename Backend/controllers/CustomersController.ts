@@ -40,19 +40,22 @@ export const addTransaction = async (req: Request, res: Response): Promise<void>
     let transaction: ITransaction | undefined;
 
     if (type === 'purchase') {
-      const discountSavings = savingsDetails.filter((saving: ISavingDetail) => saving.source === 'discount');
-      const creditSavings = savingsDetails.filter((saving: ISavingDetail) => saving.source !== 'discount');
-
+     
+    const discountSavings = savingsDetails.filter((saving: ISavingDetail) => saving.source === 'discount');
+    const creditSavings = savingsDetails.filter((saving: ISavingDetail) => saving.source !== 'discount');
+    const totalDiscountSavings = discountSavings.reduce((sum: number, saving: ISavingDetail) => sum + saving.amount, 0);
+    const totalCreditSavings = creditSavings.reduce((sum: number, saving: ISavingDetail) => sum + saving.amount, 0);
+    const totalSavings = totalDiscountSavings + totalCreditSavings;
       transaction = {
         productId,
         productName,
         type,
         originalPrice,
-        finalPrice: originalPrice - discountSavings.reduce((sum: number, saving: ISavingDetail) => sum + saving.amount, 0),
+        finalPrice: originalPrice - totalSavings ,
         purchaseSavings: discountSavings,
         creditSavings: creditSavings
       };
-    } else if (type === 'credit') {
+    } else  {
       transaction = {
         productId,
         productName,
@@ -123,7 +126,7 @@ export const updateSavings = async (req: Request, res: Response): Promise<void> 
     if (type === 'purchase') {
       transaction.purchaseSavings = savingsDetails;
       transaction.finalPrice = transaction.originalPrice - savingsDetails.reduce((sum: number, saving: { amount: number }) => sum + saving.amount, 0);
-    } else  {
+    } else {
       transaction.creditSavings = savingsDetails;
     }
 
@@ -240,7 +243,7 @@ export const getAllSavings = async (req: Request, res: Response): Promise<void> 
           productName: transaction.productName,
           savings: transaction.purchaseSavings
         });
-      } else if (transaction.type === 'credit') {
+      } else {
         savings.creditSavings.push({
           productName: transaction.productName,
           savings: transaction.creditSavings

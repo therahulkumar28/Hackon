@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import connectDB from './config/db';
 import productRoutes from './routes/productsRoutes';
 import customerRoutes from './routes/customersRoutes';
-
+import cors from 'cors'
 dotenv.config();
 
 const app = express();
@@ -13,6 +13,7 @@ const app = express();
 connectDB();
 
 // Middleware
+app.use(cors());
 app.use(bodyParser.json());
 
 // Routes
