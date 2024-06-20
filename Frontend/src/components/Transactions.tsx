@@ -36,7 +36,11 @@ const Transactions: React.FC = () => {
       const response = await axios.get(
         `http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/transactions`
       );
-      setAllTransactions(response.data);
+      const sortedTransactions = response.data.sort((a: Transaction, b: Transaction) => {
+        // Sort by createdAt in descending order (latest first)
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+      setAllTransactions(sortedTransactions);
     } catch (error) {
       console.error('Error fetching transactions:', error);
     }
