@@ -9,6 +9,7 @@ export interface ITransaction {
   _id?:mongoose.Types.ObjectId;
   productId: mongoose.Types.ObjectId;
   productName: string;
+  category: string ;
   type: 'purchase' | 'credit'; // 'purchase' or 'credit'
   originalPrice: number;
   finalPrice: number;
@@ -53,6 +54,7 @@ const TransactionSchema: Schema = new Schema({
   productName: { type: String, required: true },
   type: { type: String, enum: ['purchase', 'credit'], required: true },
   originalPrice: { type: Number, required: true },
+  category:{type:String  },
   finalPrice: { type: Number, required: true },
   purchaseSavings: [SavingDetailSchema], // Savings due to discounts on products
   creditSavings: [SavingDetailSchema], // Savings due to credits like credit cards, gift cards, etc.

@@ -41,7 +41,7 @@ export const createCustomer = async (req: Request, res: Response): Promise<void>
 // Add a transaction (purchase a product or credit)
 export const addTransaction = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { customerId, type, productId, productName, originalPrice, savingsDetails } = req.body;
+    const { customerId, type, productId, productName, category , originalPrice, savingsDetails } = req.body;
     const customer = await Customer.findById(customerId);
 
     if (!customer) {
@@ -61,6 +61,7 @@ export const addTransaction = async (req: Request, res: Response): Promise<void>
       transaction = {
         productId,
         productName,
+        category ,
         type,
         originalPrice,
         finalPrice: originalPrice - totalSavings ,
@@ -72,6 +73,7 @@ export const addTransaction = async (req: Request, res: Response): Promise<void>
       transaction = {
         productId,
         productName,
+        category ,
         type,
         originalPrice,
         finalPrice: 0, // Assuming credits don't affect final price
@@ -388,5 +390,42 @@ export const getPurchaseLimit = async (req: Request, res: Response): Promise<voi
     res.status(200).json(customer);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching purchase limit', error });
+  }
+};
+
+
+
+
+export const getSpendingByCategory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const customer = await Customer.findById(id).populate('transactions');
+
+    if (!customer) {
+      res.status(404).json({ message: 'Customer not found' });
+      return;
+    }
+
+    const spendingByCategory = customer.transactions.reduce((acc: { [key: string]: { totalExpenditure: number, discountSavings: number, creditSavings: number, totalSavings: number } }, transaction: ITransaction) => {
+      const category = transaction.category || 'Uncategorized';
+      if (!acc[category]) {
+        acc[category] = { totalExpenditure: 0, discountSavings: 0, creditSavings: 0, totalSavings: 0 };
+      }
+
+      const discountSavings = transaction.purchaseSavings.reduce((sum, saving) => sum + saving.amount, 0);
+      const creditSavings = transaction.creditSavings.reduce((sum, saving) => sum + saving.amount, 0);
+      const totalSavings = discountSavings + creditSavings;
+
+      acc[category].totalExpenditure += transaction.finalPrice;
+      acc[category].discountSavings += discountSavings;
+      acc[category].creditSavings += creditSavings;
+      acc[category].totalSavings += totalSavings;
+
+      return acc;
+    }, {});
+
+    res.status(200).json(spendingByCategory);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching spending by category', error });
   }
 };

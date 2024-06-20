@@ -9,7 +9,8 @@ import {
   getAllSavings,
   getAllExpenditure,
   setPurchaseLimit ,
-  getPurchaseLimit ,
+  getPurchaseLimit, 
+  getSpendingByCategory,
 } from '../controllers/CustomersController';
 import { checkThresholds } from '../middlewares/notificationMiddleware';
 
@@ -47,5 +48,8 @@ router.put('/customers/:id/purchase-limit', setPurchaseLimit);
 
 //getPurchaseLimit 
 router.get('/customers/:id/purchase-limit', getPurchaseLimit);
+
+//getSpendingbyCategory by id 
+router.get('/customers/:id/spending-by-category', getSpendingByCategory);
 
 export default router;

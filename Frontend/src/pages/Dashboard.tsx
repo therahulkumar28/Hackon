@@ -3,6 +3,7 @@ import React from 'react';
 
 import SavingsGraph from '../components/SavingsGraph';
 import SetLimits from '../components/setLimits';
+import SpendingByCategory from '../components/SpendingbyCategoryGraph';
 
 const Dashboard: React.FC = () => {
  // const [customer, setCustomer] = useState<any>(null);
@@ -26,6 +27,7 @@ const Dashboard: React.FC = () => {
       <br></br>
       <br></br>
       <SetLimits/>
+      <SpendingByCategory/>
     </div>
   );
 };

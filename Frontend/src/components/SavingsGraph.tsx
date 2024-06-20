@@ -27,7 +27,7 @@ const SavingsGraph: React.FC = () => {
         const response = await axios.get('http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/transactions');
         setTransactions(response.data);
         const uniqueYears: string[] = Array.from(new Set(response.data.map((transaction: Transaction) => new Date(transaction.createdAt).getFullYear().toString())));
-        setYears(uniqueYears.sort((a, b) => parseInt(b) - parseInt(a))); // Sort years in descending order
+        setYears(uniqueYears.sort((a, b) => parseInt(b) - parseInt(a))); 
         if (uniqueYears.length > 0) {
           setSelectedYear(uniqueYears[0]);
         }
@@ -41,7 +41,7 @@ const SavingsGraph: React.FC = () => {
 
   const filteredTransactions = transactions.filter(transaction => new Date(transaction.createdAt).getFullYear().toString() === selectedYear);
 
-  const groupedData = filteredTransactions.reduce((acc: any, transaction) => {
+  const groupedData = filteredTransactions.reduce((acc : any , transaction) => {
     const month = new Date(transaction.createdAt).toLocaleString('default', { month: 'short' });
     const key = `${month} ${selectedYear}`;
 
