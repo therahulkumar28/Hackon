@@ -62,20 +62,30 @@ const CustomerDetails = () => {
         try {
             const customerId = '6673d641b5ce57594b4523c2'; 
             if (editedPurchaseLimit) {
+                // Check if thresholdLimit is greater than spendingLimit
+                if (editedPurchaseLimit.thresholdLimit > editedPurchaseLimit.spendingLimit) {
+                    alert('Threshold limit cannot be greater than spending limit. Please adjust.');
+                    return; // Prevent further execution
+                }
               
                 const response = await axiosInstance.put(`/customers/${customerId}/purchase-limit`, editedPurchaseLimit);
                 console.log('Response from server:', response.data);
                 setPurchaseLimit(editedPurchaseLimit);
                 setEditMode(false);
-                if(editedPurchaseLimit.spendingNotifications)
-                alert('You will receive a Notifications as per your request')
-                alert('email will be sent if threshold limit is reached');
+                if (editedPurchaseLimit.spendingNotifications) {
+                    alert('You will receive notifications as per your request.');
+                    // Optionally, redirect to payment history
+                    // history.push('/payment-history');
+                }
+                alert('Email will be sent if threshold limit is reached.');
+                // Optionally, redirect to payment history
                 <Link to={'/payment-history'} />
             }
         } catch (error) {
             console.error('Error updating customer purchase limit:', error);
         }
     };
+    
 
     const renderCustomerInfo = () => {
         if (!customer) return null;
