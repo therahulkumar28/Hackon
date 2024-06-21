@@ -148,42 +148,6 @@ export const addTransaction = async (req: Request, res: Response): Promise<void>
   }
 };
 
-// Update savings for a transaction
-export const updateSavings = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { customerId, transactionId, type, savingsDetails } = req.body;
-    const customer: ICustomer | null = await Customer.findById(customerId);
-
-    if (!customer) {
-      res.status(404).json({ message: 'Customer not found' });
-      return;
-    }
-
-    // Find the transaction by ID within customer's transactions array
-    const transaction = customer.transactions.find(t => t._id?.equals(transactionId));
-
-    if (!transaction) {
-      res.status(404).json({ message: 'Transaction not found' });
-      return;
-    }
-
-    // Update savings details based on transaction type
-    if (type === 'purchase') {
-      transaction.purchaseSavings = savingsDetails;
-      transaction.finalPrice = transaction.originalPrice - savingsDetails.reduce((sum: number, saving: { amount: number }) => sum + saving.amount, 0);
-    } else {
-      transaction.creditSavings = savingsDetails;
-    }
-
-    // Save the updated customer document
-    await customer.save();
-
-    // Respond with the updated customer object (you may choose to respond with the updated transaction instead)
-    res.status(200).json(customer);
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating savings', error: error });
-  }
-};
 
 export const getAllExpenditure = async (req: Request, res: Response): Promise<void> => {
   try {

@@ -1,34 +1,27 @@
-import nodemailer, { Transporter } from 'nodemailer';
+const nodemailer = require("nodemailer");
 
-interface MailOptions {
-    from: string;
-    to: string;
-    subject: string;
-    text: string;
-}
-
-const transporter: Transporter = nodemailer.createTransport({
-    service: 'Gmail',
+export const sendEmail = async (options: any) => {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
     auth: {
-        user: 'your-email@gmail.com',
-        pass: 'your-email-password'
-    }
-});
+      user: process.env.EMAIL,
+      pass: process.env.PASS,
+    },
+  });
 
-const sendEmail = async (to: string, subject: string, text: string): Promise<void> => {
-    const mailOptions: MailOptions = {
-        from: 'your-email@gmail.com',
-        to,
-        subject,
-        text
-    };
+  const mailOptions = {
+    from: "AMAZON BUDGET ALERT <process.env.EMAIL>", // Add a valid from email address
+    to: options.email,
+    subject: options.subject,
+    text: options.message,
+    // html: options.html, // Uncomment if you want to send HTML content
+  };
 
-    try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent: ' + info.response);
-    } catch (error) {
-        console.error('Error sending email:', error);
-    }
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('Email sent successfully');
+  } catch (error) {
+    console.error('Error sending email:', error);
+    throw error; // Re-throw the error to handle it in the calling function if needed
+  }
 };
-
-export { sendEmail };

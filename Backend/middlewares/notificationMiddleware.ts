@@ -4,7 +4,7 @@ import { sendEmail } from '../utils/email';
 
 export const checkThresholds = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const  customerId  = req.body.customerId || req.params.customerId;
+    const customerId = req.body.customerId || req.params.customerId;
     const finalPrice = req.body.finalPrice || 0;
     const customer = await Customer.findById(customerId);
 
@@ -17,11 +17,21 @@ export const checkThresholds = async (req: Request, res: Response, next: NextFun
         return sum;
       }, 0);
 
-      console.log(`Yearly Expenditure: ${yearlyExpenditure}`);
-      console.log(customer.thresholdLimit)
+      // Setup email data
+      const emailOptions = {
+        email: 'lokeshjakka03@gmail.com', // The recipient's email address
+        subject: 'Budget Alert',
+        message: '',
+      };
+
+      // Send the email
+      sendEmail(emailOptions).catch(error => {
+        console.error('Error sending initial email:', error);
+      });
+
       if (yearlyExpenditure + finalPrice >= customer.thresholdLimit) {
-        const recipientEmail = customer.email; // Use customer's email
-        const subject = 'Notification: Approaching Purchase Limit';
+        const recipientEmail = 'lokeshjakka03@gmail.com';
+        const subject = 'Notification: Approaching Yearly Spending Limit';
         const emailContent = `
           Dear ${customer.name},
 
@@ -33,11 +43,20 @@ export const checkThresholds = async (req: Request, res: Response, next: NextFun
 
           Best regards,
           Your Company Name
+          HackOn
         `;
 
-        await sendEmail(recipientEmail, subject, emailContent);
-        console.log(`Email sent to ${customer.name} (${recipientEmail}) successfully.`);
-        
+        const thresholdEmailOptions = {
+          email: recipientEmail,
+          subject: subject,
+          message: emailContent,
+        };
+
+        sendEmail(thresholdEmailOptions).then(() => {
+          console.log(`Email sent to ${customer.name} (${recipientEmail}) successfully.`);
+        }).catch(error => {
+          console.error('Error sending threshold email:', error);
+        });
       }
     }
     next();
