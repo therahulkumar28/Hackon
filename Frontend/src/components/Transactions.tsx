@@ -21,7 +21,7 @@ const Transactions: React.FC = () => {
   const [currency, setCurrency] = useState('INR');
   const itemsPerPage = 4;
 
-  const exchangeRates = {
+  const exchangeRates : { [key: string]: number } = {
     INR: 1,
     USD: 0.012, // Example exchange rate, 1 INR = 0.012 USD
   };
@@ -69,7 +69,7 @@ const Transactions: React.FC = () => {
   };
 
   return (
-    <div className=" relative p-4 flex w-full flex-col justify-center items-center">
+    <div className=" relative  p-4">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Transaction History</h2>
         <select value={currency} onChange={handleCurrencyChange} className="p-2 border rounded-lg">

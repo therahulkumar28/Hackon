@@ -10,7 +10,7 @@ import Transaction from "../components/Transactions"
 
 const PaymentHistory = () => {
   return (
-    <div className=" min-h-screen min-w-screen flex flex-col justify-center items-center">
+    <div className=" ">
       <Appbar/>
 
         <CustomerDetails/>

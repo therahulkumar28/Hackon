@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import { Bar } from 'react-chartjs-2';
 import axiosInstance from '../config/axios';
 
@@ -110,9 +111,9 @@ const TransactionGraph: React.FC = () => {
   };
 
   return (
-    <div className="" >
+    <div className="p-4" style={{ overflowX: 'auto' }}>
       <form onSubmit={handleSubmit} className="mb-4">
-        <div className="flex items-center  justify-center ">
+        <div className="flex items-center">
           <label htmlFor="month" className="mr-2">Month:</label>
           <select id="month" value={selectedMonth} onChange={handleMonthChange} className="p-2 border rounded-lg mr-4">
             <option value="">Select Month</option>
