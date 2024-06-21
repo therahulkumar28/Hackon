@@ -26,7 +26,7 @@ export interface ICustomer extends Document {
   transactions: ITransaction[];
   spendingLimit: number;
   thresholdLimit: number;
-  spendingNotifications:string 
+  spendingNotifications:boolean; 
   monthlySavings: {
     year: number;
     month: number;
@@ -68,7 +68,7 @@ const CustomerSchema: Schema = new Schema({
   transactions: [TransactionSchema],
   spendingLimit: { type: Number, required: true },
   thresholdLimit: { type: Number, required: true },
-  spendingNotifications : {type : String },
+  spendingNotifications : {type : Boolean , default : false },
   monthlySavings: [{
     year: { type: Number, required: true },
     month: { type: Number, required: true },

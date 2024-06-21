@@ -61,9 +61,13 @@ const CustomerDetails = () => {
         try {
             const customerId = '6673d641b5ce57594b4523c2'; 
             if (editedPurchaseLimit) {
-                await axios.put(`http://localhost:3000/api/customers/${customerId}/purchase-limit`, editedPurchaseLimit);
+                console.log('Saving purchase limit:', editedPurchaseLimit);
+                const response = await axios.put(`http://localhost:3000/api/customers/${customerId}/purchase-limit`, editedPurchaseLimit);
+                console.log('Response from server:', response.data);
                 setPurchaseLimit(editedPurchaseLimit);
                 setEditMode(false);
+                if(editedPurchaseLimit.spendingNotifications)
+                alert('You will receive a Notifications as per your request')
             }
         } catch (error) {
             console.error('Error updating customer purchase limit:', error);

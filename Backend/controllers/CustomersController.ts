@@ -379,8 +379,8 @@ export const setPurchaseLimit = async (req: Request, res: Response): Promise<voi
 // getPurchaseLimit
 export const getPurchaseLimit = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
-    const customer = await Customer.findById(id, 'spendingLimit  thresholdLimit spendingNotifications');
+    const { customerId } = req.params;
+    const customer = await Customer.findById(customerId, 'spendingLimit  thresholdLimit spendingNotifications');
 
     if (!customer) {
       res.status(404).json({ message: 'Customer not found' });

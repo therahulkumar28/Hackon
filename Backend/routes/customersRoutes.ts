@@ -49,7 +49,7 @@ router.get('/customers/:customerId/expenditures', getAllExpenditure);
 router.put('/customers/:id/purchase-limit', setPurchaseLimit);
 
 //getPurchaseLimit 
-router.get('/customers/:id/purchase-limit', getPurchaseLimit);
+router.get('/customers/:customerId/purchase-limit', checkThresholds ,getPurchaseLimit);
 
 //getSpendingbyCategory by id 
 router.get('/customers/:id/spending-by-category', getSpendingByCategory);
