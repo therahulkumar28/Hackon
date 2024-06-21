@@ -46,7 +46,7 @@ router.get('/customers/:customerId/expenditures', getAllExpenditure);
 
 
 // setPurchaseLimit
-router.put('/customers/:id/purchase-limit', setPurchaseLimit);
+router.put('/customers/:customerId/purchase-limit', setPurchaseLimit);
 
 //getPurchaseLimit 
 router.get('/customers/:customerId/purchase-limit', checkThresholds ,getPurchaseLimit);

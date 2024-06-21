@@ -4,7 +4,7 @@ import { sendEmail } from '../utils/email';
 
 export const checkThresholds = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { customerId } = req.body;
+    const  customerId  = req.body.customerId || req.params.customerId;
     const finalPrice = req.body.finalPrice || 0;
     const customer = await Customer.findById(customerId);
 
@@ -18,8 +18,8 @@ export const checkThresholds = async (req: Request, res: Response, next: NextFun
       }, 0);
 
       console.log(`Yearly Expenditure: ${yearlyExpenditure}`);
-      
-      if (yearlyExpenditure + finalPrice >= customer.spendingLimit) {
+      console.log(customer.thresholdLimit)
+      if (yearlyExpenditure + finalPrice >= customer.thresholdLimit) {
         const recipientEmail = customer.email; // Use customer's email
         const subject = 'Notification: Approaching Purchase Limit';
         const emailContent = `
@@ -37,6 +37,7 @@ export const checkThresholds = async (req: Request, res: Response, next: NextFun
 
         await sendEmail(recipientEmail, subject, emailContent);
         console.log(`Email sent to ${customer.name} (${recipientEmail}) successfully.`);
+        
       }
     }
     next();
