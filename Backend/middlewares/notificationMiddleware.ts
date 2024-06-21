@@ -4,8 +4,7 @@ import { sendEmail } from '../utils/email';
 
 export const checkThresholds = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const customerId = req.body.customerId || req.params.customerId;
-    console.log(customerId)
+    const { customerId } = req.body;
     const finalPrice = req.body.finalPrice || 0;
     const customer = await Customer.findById(customerId);
 

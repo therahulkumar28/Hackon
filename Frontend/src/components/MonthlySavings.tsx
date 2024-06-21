@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Bar } from 'react-chartjs-2';
-import axiosInstance from '../config/axios';
 
 interface Transaction {
   productId: string;
@@ -14,13 +14,20 @@ interface Transaction {
   createdAt: string;
 }
 
-const TransactionGraph = () => {
+const TransactionGraph: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [monthOptions, setMonthOptions] = useState<number[]>([]);
   const [yearOptions, setYearOptions] = useState<number[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>('');
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('INR'); // Default to INR
+
+  // Exchange rates
+  const exchangeRates: { [key: string]: number } = {
+    INR: 1,
+    USD: 0.012, // Example exchange rate: 1 INR = 0.012 USD
+  };
 
   useEffect(() => {
     fetchTransactionOptions();
@@ -29,30 +36,22 @@ const TransactionGraph = () => {
   const fetchTransactionOptions = async () => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get<Transaction[]>(`/customers/6673d641b5ce57594b4523c2/transactions`);
-      console.log('Response Data:', response.data); // Log the response data
+      const response = await axios.get<Transaction[]>(`http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/transactions`);
       if (Array.isArray(response.data)) {
         const sortedTransactions = response.data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         const uniqueMonths = Array.from(new Set(sortedTransactions.map(transaction => new Date(transaction.createdAt).getMonth() + 1)));
         const uniqueYears = Array.from(new Set(sortedTransactions.map(transaction => new Date(transaction.createdAt).getFullYear())));
         setMonthOptions(uniqueMonths);
         setYearOptions(uniqueYears);
+        // Set default selected month and year to the latest available
+        setSelectedMonth(uniqueMonths[0]?.toString() || '');
+        setSelectedYear(uniqueYears[0]?.toString() || '');
+        setTransactions(sortedTransactions);
       } else {
         console.error('Expected an array but received:', response.data);
       }
     } catch (error) {
       console.error('Error fetching transaction options:', error);
-    }
-    setLoading(false);
-  };
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const response = await axiosInstance.get<Transaction[]>(`http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/transactions`);
-      setTransactions(response.data);
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
     }
     setLoading(false);
   };
@@ -65,9 +64,49 @@ const TransactionGraph = () => {
     setSelectedYear(event.target.value);
   };
 
+  const handleCurrencyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCurrency(event.target.value);
+    // After changing currency, refetch data to apply new currency conversion
+    fetchData(selectedMonth, selectedYear, event.target.value);
+  };
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    fetchData();
+    fetchData(selectedMonth, selectedYear, selectedCurrency);
+  };
+
+  const fetchData = async (month: string, year: string, currency: string) => {
+    setLoading(true);
+    try {
+      const response = await axios.get<Transaction[]>(`http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/transactions`);
+      const filteredTransactions = response.data.filter(transaction => {
+        const transactionDate = new Date(transaction.createdAt);
+        return transactionDate.getMonth() + 1 === parseInt(month) && transactionDate.getFullYear() === parseInt(year);
+      });
+
+      // Convert prices based on selected currency
+      const convertedTransactions = filteredTransactions.map(transaction => {
+       
+        return {
+          ...transaction,
+          originalPrice: currency === 'USD' ? transaction.originalPrice * exchangeRates['USD'] : transaction.originalPrice,
+          finalPrice: currency === 'USD' ? transaction.finalPrice * exchangeRates['USD'] : transaction.finalPrice,
+          purchaseSavings: transaction.purchaseSavings.map(saving => ({
+            ...saving,
+            amount: currency === 'USD' ? saving.amount * exchangeRates['USD'] : saving.amount
+          })),
+          creditSavings: transaction.creditSavings.map(saving => ({
+            ...saving,
+            amount: currency === 'USD' ? saving.amount * exchangeRates['USD'] : saving.amount
+          }))
+        };
+      });
+
+      setTransactions(convertedTransactions);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+    }
+    setLoading(false);
   };
 
   return (
@@ -91,6 +130,13 @@ const TransactionGraph = () => {
           <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-lg">Fetch Transactions</button>
         </div>
       </form>
+      <div className="flex items-center mb-4">
+        <label className="mr-2">Show prices in:</label>
+        <select value={selectedCurrency} onChange={handleCurrencyChange} className="p-2 border rounded-lg mr-2">
+          <option value="INR">INR</option>
+          <option value="USD">USD</option>
+        </select>
+      </div>
       {loading ? (
         <p>Loading...</p>
       ) : (
@@ -103,29 +149,24 @@ const TransactionGraph = () => {
                 labels: transactions.map((transaction) => transaction.productName),
                 datasets: [
                   {
-                    label: 'Original Price',
+                    label: selectedCurrency === 'USD' ? 'Original Price (USD)' : 'Original Price (INR)',
                     data: transactions.map((transaction) => transaction.originalPrice),
                     backgroundColor: 'rgba(54, 162, 235, 0.6)',
                   },
                   {
-                    label: 'Final Price',
+                    label: selectedCurrency === 'USD' ? 'Final Price (USD)' : 'Final Price (INR)',
                     data: transactions.map((transaction) => transaction.finalPrice),
                     backgroundColor: 'rgba(255, 99, 132, 0.6)',
                   },
                   {
-                    label: 'Discount Savings',
+                    label: selectedCurrency === 'USD' ? 'Discount Savings (USD)' : 'Discount Savings (INR)',
                     data: transactions.map((transaction) => transaction.purchaseSavings.reduce((total, saving) => total + saving.amount, 0)),
                     backgroundColor: 'rgba(75, 192, 192, 0.6)',
                   },
                   {
-                    label: 'Credit Savings',
+                    label: selectedCurrency === 'USD' ? 'Credit Savings (USD)' : 'Credit Savings (INR)',
                     data: transactions.map((transaction) => transaction.creditSavings.reduce((total, saving) => total + saving.amount, 0)),
                     backgroundColor: 'rgba(153, 102, 255, 0.6)',
-                  },
-                  {
-                    label: 'Total Expenditure',
-                    data: transactions.map((transaction) => transaction.finalPrice),
-                    backgroundColor: 'rgba(255, 206, 86, 0.6)',
                   },
                 ],
               }}

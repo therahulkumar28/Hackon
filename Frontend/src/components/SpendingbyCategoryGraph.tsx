@@ -8,12 +8,15 @@ interface SpendingCategory {
   creditSavings: number;
   totalSavings: number;
 }
+interface ExchangeRates {
+  [key: string]: number;
+}
 
 interface CategoryData {
   [key: string]: SpendingCategory;
 }
 
-const exchangeRates = {
+const exchangeRates:ExchangeRates = {
   INR: 1,
   USD: 0.012, // Example exchange rate, 1 INR = 0.012 USD
 };
