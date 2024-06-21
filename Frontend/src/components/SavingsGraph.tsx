@@ -25,7 +25,7 @@ const SavingsGraph: React.FC = () => {
 
   const exchangeRates = {
     INR: 1,
-    USD: 0.012, // Example exchange rate, 1 INR = 0.012 USD
+    USD: 0.012, 
   };
 
   useEffect(() => {

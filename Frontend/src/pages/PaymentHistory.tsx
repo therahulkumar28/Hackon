@@ -7,10 +7,12 @@ import Transaction from "../components/Transactions"
 
 
 
+
 const PaymentHistory = () => {
   return (
     <div className="">
       <Appbar/>
+
         <CustomerDetails/>
         <div className="flex flex-wrap font-extrabold text-center text-2xl">Check your Spending by Category</div>
         <SpendingByCategory/>
