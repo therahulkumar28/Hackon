@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../config/axios';
 
 interface Customer {
     name: string;
@@ -29,7 +29,7 @@ const CustomerDetails = () => {
     const fetchCustomerDetails = async () => {
         try {
             const customerId = '6673d641b5ce57594b4523c2'; 
-            const response = await axios.get<Customer>(`http://localhost:3000/api/customers/${customerId}`);
+            const response = await axiosInstance.get<Customer>(`/customers/${customerId}`);
             setCustomer(response.data);
         } catch (error) {
             console.error('Error fetching customer details:', error);
@@ -39,7 +39,7 @@ const CustomerDetails = () => {
     const fetchCustomerPurchaseLimit = async () => {
         try {
             const customerId = '6673d641b5ce57594b4523c2'; 
-            const response = await axios.get<CustomerPurchaseLimit>(`http://localhost:3000/api/customers/${customerId}/purchase-limit`);
+            const response = await axiosInstance.get<CustomerPurchaseLimit>(`/customers/${customerId}/purchase-limit`);
             setPurchaseLimit(response.data);
             setEditedPurchaseLimit(response.data);
         } catch (error) {
@@ -62,7 +62,7 @@ const CustomerDetails = () => {
             const customerId = '6673d641b5ce57594b4523c2'; 
             if (editedPurchaseLimit) {
                 console.log('Saving purchase limit:', editedPurchaseLimit);
-                const response = await axios.put(`http://localhost:3000/api/customers/${customerId}/purchase-limit`, editedPurchaseLimit);
+                const response = await axiosInstance.put(`/customers/${customerId}/purchase-limit`, editedPurchaseLimit);
                 console.log('Response from server:', response.data);
                 setPurchaseLimit(editedPurchaseLimit);
                 setEditMode(false);

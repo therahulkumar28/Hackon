@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Bar } from 'react-chartjs-2';
+import axiosInstance from '../config/axios';
 
 interface Transaction {
   productId: string;
@@ -29,12 +29,17 @@ const TransactionGraph = () => {
   const fetchTransactionOptions = async () => {
     setLoading(true);
     try {
-      const response = await axios.get<Response[]>(`http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/transactions`);
-      const sortedTransactions = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      const uniqueMonths = Array.from(new Set(sortedTransactions.map(transaction => new Date(transaction.createdAt).getMonth() + 1)));
-      const uniqueYears = Array.from(new Set(sortedTransactions.map(transaction => new Date(transaction.createdAt).getFullYear())));
-      setMonthOptions(uniqueMonths);
-      setYearOptions(uniqueYears);
+      const response = await axiosInstance.get<Transaction[]>(`/customers/6673d641b5ce57594b4523c2/transactions`);
+      console.log('Response Data:', response.data); // Log the response data
+      if (Array.isArray(response.data)) {
+        const sortedTransactions = response.data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        const uniqueMonths = Array.from(new Set(sortedTransactions.map(transaction => new Date(transaction.createdAt).getMonth() + 1)));
+        const uniqueYears = Array.from(new Set(sortedTransactions.map(transaction => new Date(transaction.createdAt).getFullYear())));
+        setMonthOptions(uniqueMonths);
+        setYearOptions(uniqueYears);
+      } else {
+        console.error('Expected an array but received:', response.data);
+      }
     } catch (error) {
       console.error('Error fetching transaction options:', error);
     }
@@ -44,7 +49,7 @@ const TransactionGraph = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get<Transaction[]>(`http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/transactions`);
+      const response = await axiosInstance.get<Transaction[]>(`http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/transactions`);
       setTransactions(response.data);
     } catch (error) {
       console.error('Error fetching transactions:', error);
