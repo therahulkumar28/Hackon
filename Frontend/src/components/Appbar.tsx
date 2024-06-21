@@ -80,7 +80,12 @@ const Appbar = () => {
               </li>
               <li className="mb-2">
                 <Link to="/payment-history" className="block text-left w-full px-4 py-2 text-gray-800 hover:bg-gray-300">
-                  Payment History
+                  View Spending on Product or Category
+                </Link>
+              </li>
+              <li className="mb-2">
+                <Link to="/budget-saving" className="block text-left w-full px-4 py-2 text-gray-800 hover:bg-gray-300">
+                  View Monthly Expenditure
                 </Link>
               </li>
             </ul>
