@@ -79,7 +79,7 @@ const CustomerDetails = () => {
                 }
                 alert('Email will be sent if threshold limit is reached.');
                 // Optionally, redirect to payment history
-                <Link to={'/payment-history'} />
+                window.location.reload()
             }
         } catch (error) {
             console.error('Error updating customer purchase limit:', error);
