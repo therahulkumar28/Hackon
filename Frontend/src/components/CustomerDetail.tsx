@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../config/axios';
+import { Link } from 'react-router-dom';
 
 interface Customer {
     name: string;
@@ -61,13 +62,15 @@ const CustomerDetails = () => {
         try {
             const customerId = '6673d641b5ce57594b4523c2'; 
             if (editedPurchaseLimit) {
-                console.log('Saving purchase limit:', editedPurchaseLimit);
+              
                 const response = await axiosInstance.put(`/customers/${customerId}/purchase-limit`, editedPurchaseLimit);
                 console.log('Response from server:', response.data);
                 setPurchaseLimit(editedPurchaseLimit);
                 setEditMode(false);
                 if(editedPurchaseLimit.spendingNotifications)
                 alert('You will receive a Notifications as per your request')
+                alert('email will be sent if threshold limit is reached');
+                <Link to={'/payment-history'} />
             }
         } catch (error) {
             console.error('Error updating customer purchase limit:', error);

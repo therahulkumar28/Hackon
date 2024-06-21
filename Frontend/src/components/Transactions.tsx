@@ -69,7 +69,7 @@ const Transactions: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className=" relative p-4 flex w-full flex-col justify-center items-center">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Transaction History</h2>
         <select value={currency} onChange={handleCurrencyChange} className="p-2 border rounded-lg">

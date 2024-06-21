@@ -23,7 +23,7 @@ const SavingsGraph: React.FC = () => {
   const [years, setYears] = useState<string[]>([]);
   const [currency, setCurrency] = useState<string>('INR');
 
-  const exchangeRates = {
+  const exchangeRates:{ [key: string]: number } = {
     INR: 1,
     USD: 0.012, 
   };

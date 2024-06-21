@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Bar } from 'react-chartjs-2';
+import axiosInstance from '../config/axios';
 
 interface Transaction {
   productId: string;
@@ -36,7 +36,7 @@ const TransactionGraph: React.FC = () => {
   const fetchTransactionOptions = async () => {
     setLoading(true);
     try {
-      const response = await axios.get<Transaction[]>(`http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/transactions`);
+      const response = await axiosInstance.get<Transaction[]>(`/customers/6673d641b5ce57594b4523c2/transactions`);
       if (Array.isArray(response.data)) {
         const sortedTransactions = response.data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         const uniqueMonths = Array.from(new Set(sortedTransactions.map(transaction => new Date(transaction.createdAt).getMonth() + 1)));
@@ -78,7 +78,7 @@ const TransactionGraph: React.FC = () => {
   const fetchData = async (month: string, year: string, currency: string) => {
     setLoading(true);
     try {
-      const response = await axios.get<Transaction[]>(`http://localhost:3000/api/customers/6673d641b5ce57594b4523c2/transactions`);
+      const response = await axiosInstance.get<Transaction[]>(`/customers/6673d641b5ce57594b4523c2/transactions`);
       const filteredTransactions = response.data.filter(transaction => {
         const transactionDate = new Date(transaction.createdAt);
         return transactionDate.getMonth() + 1 === parseInt(month) && transactionDate.getFullYear() === parseInt(year);
@@ -110,9 +110,9 @@ const TransactionGraph: React.FC = () => {
   };
 
   return (
-    <div className="p-4" style={{ overflowX: 'auto' }}>
+    <div className="" >
       <form onSubmit={handleSubmit} className="mb-4">
-        <div className="flex items-center">
+        <div className="flex items-center  justify-center ">
           <label htmlFor="month" className="mr-2">Month:</label>
           <select id="month" value={selectedMonth} onChange={handleMonthChange} className="p-2 border rounded-lg mr-4">
             <option value="">Select Month</option>
