@@ -46,10 +46,10 @@ router.get('/customers/:customerId/expenditures', getAllExpenditure);
 
 
 // setPurchaseLimit
-router.put('/customers/:customerId/purchase-limit', setPurchaseLimit);
+router.put('/customers/:customerId/purchase-limit', checkThresholds ,setPurchaseLimit);
 
 //getPurchaseLimit 
-router.get('/customers/:customerId/purchase-limit', checkThresholds ,getPurchaseLimit);
+router.get('/customers/:customerId/purchase-limit',getPurchaseLimit);
 
 //getSpendingbyCategory by id 
 router.get('/customers/:id/spending-by-category', getSpendingByCategory);

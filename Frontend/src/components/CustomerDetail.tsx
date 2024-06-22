@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../config/axios';
-import { Link } from 'react-router-dom';
+
 
 interface Customer {
     name: string;
     email: string;
     address: string;
     phone: string;
+    spendingLimit: number;
+    thresholdLimit: number;
+    spendingNotifications: boolean;
     createdAt: string;
 }
 
